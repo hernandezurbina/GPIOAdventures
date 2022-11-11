@@ -3,6 +3,13 @@ import time
 import sys
 import RPi.GPIO
 
+
+"""
+This works more or less. To run it you need to put the phat in top of the rpi,
+connect the accelerometer to the qwiic port, and finally open the virtualenv venv
+"""
+
+
 def runExample():
 
     print("\nSparkFun KX13X Accelerometer Example 1\n")
