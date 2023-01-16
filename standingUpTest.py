@@ -3,12 +3,7 @@ import pi_servo_hat
 import sys
 from time import sleep
 
-def runTest():
-    test = pi_servo_hat.PiServoHat()
-
-    print('Starting...')
-    test.restart()
-    sleep(5)
+def runTest(test):    
 
     while True:
         # standing phase
@@ -50,8 +45,12 @@ def runTest():
 
 if __name__ == '__main__':
     try:
-        runTest()
+        test = pi_servo_hat.PiServoHat()
+        print('Starting...')
+        test.restart()
+        sleep(5)
+        runTest(test)
     except (KeyboardInterrupt, SystemExit) as exErr:
         print('\nFinishing test.')
-
+        test.restart()
         sys.exit(0)
