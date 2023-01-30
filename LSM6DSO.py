@@ -4,26 +4,38 @@
 # Author: shaoziyang (shaoziyang@micropython.org.cn)
 # v1.0 2019.7
 
-LSM6DSO_CTRL1_XL = const(0x10)
-LSM6DSO_CTRL2_G = const(0x11)
-LSM6DSO_CTRL3_C = const(0x12)
-LSM6DSO_CTRL6_C = const(0x15)
-LSM6DSO_CTRL8_XL = const(0x17)
-LSM6DSO_STATUS = const(0x1E)
-LSM6DSO_OUT_TEMP_L = const(0x20)
-LSM6DSO_OUTX_L_G = const(0x22)
-LSM6DSO_OUTY_L_G = const(0x24)
-LSM6DSO_OUTZ_L_G = const(0x26)
-LSM6DSO_OUTX_L_A = const(0x28)
-LSM6DSO_OUTY_L_A = const(0x2A)
-LSM6DSO_OUTZ_L_A = const(0x2C)
+import qwiic_i2c
+
+#AVAILABLE_I2C_ADDRESS = [0x1F, 0x1E]
+
+LSM6DSO_CTRL1_XL = 0x10
+LSM6DSO_CTRL2_G = 0x11
+LSM6DSO_CTRL3_C = 0x12
+LSM6DSO_CTRL6_C = 0x15
+LSM6DSO_CTRL8_XL = 0x17
+LSM6DSO_STATUS = 0x1E
+LSM6DSO_OUT_TEMP_L = 0x20
+LSM6DSO_OUTX_L_G = 0x22
+LSM6DSO_OUTY_L_G = 0x24
+LSM6DSO_OUTZ_L_G = 0x26
+LSM6DSO_OUTX_L_A = 0x28
+LSM6DSO_OUTY_L_A = 0x2A
+LSM6DSO_OUTZ_L_A = 0x2C
 
 LSM6DSO_SCALEA = ('2g', '16g', '4g', '8g')
 LSM6DSO_SCALEG = ('250', '125', '500', '', '1000', '', '2000')
 
 class LSM6DSO():
-    def __init__(self, i2c, addr = 0x6B):
-        self.i2c = i2c
+    def __init__(self, i2c=None, addr=0x6B):
+
+        if i2c is None:
+            self.i2c = qwiic_i2c.getI2CDriver()
+            if self.i2c is None:
+                print("Unable to load I2C driver for this platform.")
+                return
+        else:
+            self.i2c = i2c
+
         self.addr = addr
         self.tb = bytearray(1)
         self.rb = bytearray(1)
@@ -52,10 +64,12 @@ class LSM6DSO():
 
     def setreg(self, reg, dat):
         self.tb[0] = dat
-        self.i2c.writeto_mem(self.addr, reg, self.tb)
+        #self.i2c.writeto_mem(self.addr, reg, self.tb)
+        self.i2c.writeByte(self.addr, reg, self.tb)
 
     def getreg(self, reg):
-        self.i2c.readfrom_mem_into(self.addr, reg, self.rb)
+        #self.i2c.readfrom_mem_into(self.addr, reg, self.rb)
+        self.rb = self.i2c.readByte(self.addr, reg)
         return self.rb[0]
 
     def get2reg(self, reg):
