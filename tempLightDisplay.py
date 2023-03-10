@@ -6,6 +6,10 @@ from machine import ADC, SPI, Pin
 from time import sleep
 from ST7735 import TFT, TFTColor
 from sysfont import sysfont
+import os
+from random import randint
+
+#######################
 
 sck = 18
 mosi = 19
@@ -14,6 +18,7 @@ dc = 21
 rst = 20
 cs = 17
 
+led = Pin(25, Pin.OUT)
 spi = SPI(0, sck=Pin(sck), mosi=Pin(mosi), miso=Pin(miso))
 
 tft = TFT(spi=spi, aDC=dc, aReset=rst, aCS=cs)
@@ -30,6 +35,17 @@ minTemp = float('inf')
 maxTemp = float('-inf')
 minLight = float('inf')
 maxLight = float('-inf')
+
+###################################
+
+def getImageNames():
+    images = []
+
+    for file in os.listdir('/'):
+        if (file.find('.bmp') != -1):
+            images.append(file)
+
+    return images
 
 def readLight():
     light = photoresistor.read_u16()
@@ -48,28 +64,28 @@ def readTemp():
 def displayTemp(minTemp, maxTemp, currTemp):
     tft.fill(TFT.BLACK);
 
-    tft.rotation(3)
+    tft.rotation(0)
     v = 30
-    tft.text((25, v), "Temp:", TFT.GREEN, sysfont, 3, nowrap=True)
+    tft.text((5, v), "Temp.:", TFT.GREEN, sysfont, 3, nowrap=True)
     v += sysfont["Height"] * 3
-    tft.text((25, v), "min: {:.2f}c".format(minTemp), TFT.WHITE, sysfont, 2, nowrap=False)
+    tft.text((5, v), "min: {:.2f}c".format(minTemp), TFT.WHITE, sysfont, 2, nowrap=False)
     v += sysfont["Height"] * 2
-    tft.text((25, v), "max: {:.2f}c".format(maxTemp), TFT.WHITE, sysfont, 2, nowrap=False)
+    tft.text((5, v), "max: {:.2f}c".format(maxTemp), TFT.WHITE, sysfont, 2, nowrap=False)
     v += sysfont["Height"] * 2
-    tft.text((25, v), "now: {:.2f}c".format(currTemp), TFT.WHITE, sysfont, 2, nowrap=False)
+    tft.text((5, v), "now: {:.2f}c".format(currTemp), TFT.WHITE, sysfont, 2, nowrap=False)
 
 def displayLight(minLight, maxLight, currLight):
     tft.fill(TFT.BLACK);
 
-    tft.rotation(3)
+    tft.rotation(0)
     v = 30
-    tft.text((25, v), "Light:", TFT.GREEN, sysfont, 3, nowrap=True)
+    tft.text((5, v), "Light:", TFT.GREEN, sysfont, 3, nowrap=True)
     v += sysfont["Height"] * 3
-    tft.text((25, v), "min: {:.2f}%".format(minLight), TFT.WHITE, sysfont, 2, nowrap=False)
+    tft.text((5, v), "min: {:.2f}%".format(minLight), TFT.WHITE, sysfont, 2, nowrap=False)
     v += sysfont["Height"] * 2
-    tft.text((25, v), "max: {:.2f}%".format(maxLight), TFT.WHITE, sysfont, 2, nowrap=False)
+    tft.text((5, v), "max: {:.2f}%".format(maxLight), TFT.WHITE, sysfont, 2, nowrap=False)
     v += sysfont["Height"] * 2
-    tft.text((25, v), "now: {:.2f}%".format(currLight), TFT.WHITE, sysfont, 2, nowrap=False)
+    tft.text((5, v), "now: {:.2f}%".format(currLight), TFT.WHITE, sysfont, 2, nowrap=False)
 
 def displayImage(imageFile):
     tft.fill(TFT.BLACK)
@@ -108,7 +124,13 @@ def displayImage(imageFile):
 
 #######################################################
 try:
-    print("Starting...")
+    print('Starting...')
+    led.value(1)
+    print('Getting images in dir...')
+    images = getImageNames()
+    numImages = len(images)
+    print('Found a total of {} images in dir\n'.format(numImages))
+
     while True:
 
         # first read TEMP
@@ -138,9 +160,12 @@ try:
         sleep(secs)
 
         # finally show a pretty PIC!
-        displayImage('vico.bmp')
-        print('Pausing for {} secs'.format(secs))
+        print('Displaying a pic!')
 
+        print('Pausing for {} secs'.format(secs))
+        idx = (randint(1, numImages)) - 1
+        # displayImage('vico.bmp')
+        displayImage(images[idx])
 
         print('Pausing for {} secs'.format(secsPause))
         print()
@@ -149,4 +174,5 @@ try:
 except KeyboardInterrupt:
     tft.fill(TFT.BLACK);
     spi.deinit()
+    led.value(0)
     print("Finishing!")
