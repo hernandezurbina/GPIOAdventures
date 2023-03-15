@@ -2,12 +2,13 @@
 runs only on the RPi Pico
 """
 import math
-from machine import ADC, SPI, Pin
+from machine import ADC, SPI, I2C, Pin
 from time import sleep
 from ST7735 import TFT, TFTColor
 from sysfont import sysfont
 import os
 from random import randint
+from somose import SoMoSe
 
 #######################
 
@@ -19,8 +20,12 @@ rst = 20
 cs = 17
 
 led = Pin(25, Pin.OUT)
+# start SPI for display
 spi = SPI(0, sck=Pin(sck), mosi=Pin(mosi), miso=Pin(miso))
+# start I2C for moist sensor
+i2c = I2C(0, sda=Pin(0), scl=Pin(1), freq=100000)
 
+somose = SoMoSe(i2c)
 tft = TFT(spi=spi, aDC=dc, aReset=rst, aCS=cs)
 tft.initr()
 tft.rgb(True)
@@ -30,11 +35,14 @@ photoresistor = ADC(26)
 
 secs = 10
 secsPause = 20
+rotation = 2
 
 minTemp = float('inf')
 maxTemp = float('-inf')
 minLight = float('inf')
 maxLight = float('-inf')
+minMoist = float('inf')
+maxMoist = float('-inf')
 
 ###################################
 
@@ -64,7 +72,7 @@ def readTemp():
 def displayTemp(minTemp, maxTemp, currTemp):
     tft.fill(TFT.BLACK);
 
-    tft.rotation(0)
+    tft.rotation(rotation)
     v = 30
     tft.text((5, v), "Temp.:", TFT.GREEN, sysfont, 3, nowrap=True)
     v += sysfont["Height"] * 3
@@ -74,10 +82,23 @@ def displayTemp(minTemp, maxTemp, currTemp):
     v += sysfont["Height"] * 2
     tft.text((5, v), "now: {:.2f}c".format(currTemp), TFT.WHITE, sysfont, 2, nowrap=False)
 
+def displayMoist(minMoist, maxMoist, currMoist):
+    tft.fill(TFT.BLACK);
+
+    tft.rotation(rotation)
+    v = 30
+    tft.text((5, v), "Moist.:", TFT.GREEN, sysfont, 3, nowrap=True)
+    v += sysfont["Height"] * 3
+    tft.text((5, v), "min: {:.2f}".format(minMoist), TFT.WHITE, sysfont, 2, nowrap=False)
+    v += sysfont["Height"] * 2
+    tft.text((5, v), "max: {:.2f}".format(maxMoist), TFT.WHITE, sysfont, 2, nowrap=False)
+    v += sysfont["Height"] * 2
+    tft.text((5, v), "now: {:.2f}".format(currMoist), TFT.WHITE, sysfont, 2, nowrap=False)
+
 def displayLight(minLight, maxLight, currLight):
     tft.fill(TFT.BLACK);
 
-    tft.rotation(0)
+    tft.rotation(rotation)
     v = 30
     tft.text((5, v), "Light:", TFT.GREEN, sysfont, 3, nowrap=True)
     v += sysfont["Height"] * 3
@@ -89,7 +110,7 @@ def displayLight(minLight, maxLight, currLight):
 
 def displayImage(imageFile):
     tft.fill(TFT.BLACK)
-    tft.rotation(0)
+    tft.rotation(rotation)
     f=open(imageFile, 'rb')
     if f.read(2) == b'BM':  #header
         dummy = f.read(8) #file size(4), creator bytes(4)
@@ -146,7 +167,7 @@ try:
         print('Pausing for {} secs'.format(secs))
         sleep(secs)
 
-        # then read LIGHT
+        # second read LIGHT
         light = readLight()
 
         if light > maxLight:
@@ -158,6 +179,19 @@ try:
         displayLight(minLight, maxLight, light)
         print('Pausing for {} secs'.format(secs))
         sleep(secs)
+
+        # third read MOIST
+        meanMoist, moist = somose.measure()
+        if moist > maxMoist:
+            maxMoist = moist
+        if moist < minMoist:
+            minMoist = moist
+
+        print('Moisture:\tMIN: {:.2f}\tMAX: {:.2f}\tCURR: {:.2f}'.format(minMoist, maxMoist, moist))
+        displayMoist(minMoist, maxMoist, moist)
+        print('Pausing for {} secs'.format(secs))
+        sleep(secs)
+
 
         # finally show a pretty PIC!
         print('Displaying a pic!')
