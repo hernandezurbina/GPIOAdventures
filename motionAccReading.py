@@ -16,9 +16,10 @@ def runTest(test):
     print('r - get acc reading | 1 to 4 - move leg | e - exit')
     print('\n')
 
-    legStatus = {1: 0, 2: 0, 3: 0, 4: 0} # 0: resting, `1: standing
-    restingConf = {1: 0, 2: 90, 3: 90, 4: 0}
-    standingConf = {1: 90, 2: 0, 3: 0, 4: 90}
+    legStatus = {1: 0, 2: 0, 3: 0, 4: 0} # 0: resting, 1: standing
+    standingConf = {1: 0, 2: 90, 3: 90, 4: 0}
+    restingConf = {1: 90, 2: 0, 3: 0, 4: 90}
+    
     while True:
 
         x = input()
@@ -35,7 +36,7 @@ def runTest(test):
             if legStatus[leg] == 0:
                 # leg is resting now should stand
                 test.move_servo_position(leg, standingConf[leg])
-                legStatusp[leg] = 1
+                legStatus[leg] = 1
             else:
                 # leg is standing now should rest
                 test.move_servo_position(leg, restingConf[leg])
