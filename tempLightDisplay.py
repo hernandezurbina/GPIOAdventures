@@ -9,6 +9,7 @@ from sysfont import sysfont
 import os
 from random import randint
 from somose import SoMoSe
+import ds1302
 
 #######################
 
@@ -24,6 +25,8 @@ led = Pin(25, Pin.OUT)
 spi = SPI(0, sck=Pin(sck), mosi=Pin(mosi), miso=Pin(miso))
 # start I2C for moist sensor
 i2c = I2C(0, sda=Pin(0), scl=Pin(1), freq=100000)
+# start communication w RTC
+ds = ds1302.DS1302(Pin(6),Pin(7),Pin(8))
 
 somose = SoMoSe(i2c)
 tft = TFT(spi=spi, aDC=dc, aReset=rst, aCS=cs)
@@ -69,7 +72,24 @@ def readTemp():
     temp_fahr = (temp_cels * 1.8) + 32
     return temp_cels
 
-def displayTemp(minTemp, maxTemp, currTemp):
+def getDateTime():
+    (Y, M, D, day, hr, m, s) = ds.date_time()
+    if s < 10:
+        s = "0" + str(s)
+    if m < 10:
+        m = "0" + str(m)
+    if hr < 10:
+        hr = "0" + str(hr)
+    if D < 10:
+        D = "0" + str(D)
+    if M < 10:
+        M = "0" + str(M)
+    strTime = str(hr) + ":" + str(m) # + ":" + str(s)
+    strDate = str(D) + "." + str(M) + "." + str(Y)
+
+    return strTime, strDate
+
+def displayTemp(minTemp, maxTemp, currTemp, displayTime=True):
     tft.fill(TFT.BLACK);
 
     tft.rotation(rotation)
@@ -82,7 +102,15 @@ def displayTemp(minTemp, maxTemp, currTemp):
     v += sysfont["Height"] * 2
     tft.text((5, v), "now: {:.2f}c".format(currTemp), TFT.WHITE, sysfont, 2, nowrap=False)
 
-def displayMoist(minMoist, maxMoist, currMoist):
+    if displayTime:
+        strTime, strDate = getDateTime()
+        v += sysfont["Height"] * 3
+        tft.text((20, v), strTime, TFT.YELLOW, sysfont, 3, nowrap=False)
+        v += sysfont["Height"] * 3
+        tft.text((10, v), strDate, TFT.YELLOW, sysfont, 2, nowrap=False)
+
+
+def displayMoist(minMoist, maxMoist, currMoist, displayTime=True):
     tft.fill(TFT.BLACK);
 
     tft.rotation(rotation)
@@ -95,7 +123,15 @@ def displayMoist(minMoist, maxMoist, currMoist):
     v += sysfont["Height"] * 2
     tft.text((5, v), "now: {:.2f}".format(currMoist), TFT.WHITE, sysfont, 2, nowrap=False)
 
-def displayLight(minLight, maxLight, currLight):
+    if displayTime:
+        strTime, strDate = getDateTime()
+        v += sysfont["Height"] * 3
+        tft.text((20, v), strTime, TFT.YELLOW, sysfont, 3, nowrap=False)
+        v += sysfont["Height"] * 3
+        tft.text((10, v), strDate, TFT.YELLOW, sysfont, 2, nowrap=False)
+
+
+def displayLight(minLight, maxLight, currLight, displayTime=True):
     tft.fill(TFT.BLACK);
 
     tft.rotation(rotation)
@@ -107,6 +143,14 @@ def displayLight(minLight, maxLight, currLight):
     tft.text((5, v), "max: {:.2f}%".format(maxLight), TFT.WHITE, sysfont, 2, nowrap=False)
     v += sysfont["Height"] * 2
     tft.text((5, v), "now: {:.2f}%".format(currLight), TFT.WHITE, sysfont, 2, nowrap=False)
+
+    if displayTime:
+        strTime, strDate = getDateTime()
+        v += sysfont["Height"] * 3
+        tft.text((20, v), strTime, TFT.YELLOW, sysfont, 3, nowrap=False)
+        v += sysfont["Height"] * 3
+        tft.text((10, v), strDate, TFT.YELLOW, sysfont, 2, nowrap=False)
+
 
 def displayImage(imageFile):
     tft.fill(TFT.BLACK)
@@ -162,7 +206,7 @@ try:
         if temp < minTemp:
             minTemp = temp
 
-        print('Temp:\tMIN: {:.2f}C\tMAX: {:.2f}C\tCURR: {:.2f}C'.format(minTemp, maxTemp, temp))
+        print('Temp.:\tMIN: {:.2f}C\tMAX: {:.2f}C\tCURR: {:.2f}C'.format(minTemp, maxTemp, temp))
         displayTemp(minTemp, maxTemp, temp)
         print('Pausing for {} secs'.format(secs))
         sleep(secs)
@@ -187,7 +231,7 @@ try:
         if moist < minMoist:
             minMoist = moist
 
-        print('Moisture:\tMIN: {:.2f}\tMAX: {:.2f}\tCURR: {:.2f}'.format(minMoist, maxMoist, moist))
+        print('Moist.:\tMIN: {:.2f}\tMAX: {:.2f}\tCURR: {:.2f}'.format(minMoist, maxMoist, moist))
         displayMoist(minMoist, maxMoist, moist)
         print('Pausing for {} secs'.format(secs))
         sleep(secs)
