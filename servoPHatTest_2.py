@@ -7,9 +7,11 @@ then put all the servos, and finally open the virtualenv venv
 """
 
 test = pi_servo_hat.PiServoHat()
-servo_number = 4
+servo_number = 0
 
 test.restart()
+
+print("starting...")
 
 for i in range(0, 90):
     print(i)
@@ -22,5 +24,7 @@ for i in range(90, 0, -1):
     print(i)
     test.move_servo_position(servo_number, i)
     time.sleep(1)
+
+print("done! :-)")
 
 test.restart()
