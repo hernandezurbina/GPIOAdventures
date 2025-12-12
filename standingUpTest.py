@@ -32,7 +32,7 @@ def get_roll_pitch(myKx):
 
         roll_deg  = math.degrees(roll)
         pitch_deg = math.degrees(pitch)
-    return roll_deg, pitch_deg
+    return round(roll_deg), round(pitch_deg)
     
 
 def runTest(test, option):
